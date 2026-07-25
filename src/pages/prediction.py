@@ -5,9 +5,8 @@ import plotly.express as px
 from datetime import datetime
 
 from src.components import data_validation
-from src.explainability import ModelExplainer
 from src.logger import logging
-from src.utils import model_exists
+from src.utils import model_exists, load_model, load_scaler, load_encoder, load_explainer
 from src.recommendation_engine import RecommendationEngine
 from src.report_generator import ReportGenerator
 from config.config import *
@@ -33,10 +32,10 @@ def show_prediction():
         return
 
     try:
-        model = joblib.load(MODEL_PATH)
-        scaler = joblib.load(SCALER_PATH)
-        encoder = joblib.load(ENCODER_PATH)
-        explainer = ModelExplainer(model)
+        model = load_model()
+        scaler = load_scaler()
+        encoder = load_encoder()
+        explainer = load_explainer()
     except Exception as e:
         logging.error(str(e))
         st.error("Unable to load model artifacts.")
@@ -225,19 +224,22 @@ def show_prediction():
             st.markdown('</div>', unsafe_allow_html=True)
 
         # Log to History file
-        history = pd.DataFrame({
-            "Timestamp": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
-            "Prediction": [prediction[0]],
-            "Probability": [failure_probability],
-            "Risk": [risk]
-        })
+        try:
+            history = pd.DataFrame({
+                "Timestamp": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+                "Prediction": [prediction[0]],
+                "Probability": [failure_probability],
+                "Risk": [risk]
+            })
 
-        history.to_csv(
-            "data/prediction_history.csv",
-            mode="a",
-            header=False,
-            index=False
-        )
+            history.to_csv(
+                "data/prediction_history.csv",
+                mode="a",
+                header=False,
+                index=False
+            )
+        except Exception as write_err:
+            logging.warning(f"Could not write prediction history: {write_err}")
 
         # Download buttons side-by-side inside a card
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)

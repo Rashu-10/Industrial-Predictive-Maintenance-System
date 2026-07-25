@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import joblib
+from src.utils import load_model
 
 
 def show_dashboard():
@@ -141,7 +142,7 @@ def show_dashboard():
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
             # Model Feature Importance
             try:
-                model = joblib.load("artifacts/model.pkl")
+                model = load_model()
                 importance_df = pd.DataFrame({
                     "Feature": ["Type", "Air Temp", "Process Temp", "RPM", "Torque", "Tool Wear"],
                     "Importance": model.feature_importances_
